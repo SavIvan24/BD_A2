@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""Mapper for Pipeline 1: Inverted Index.
+"""Mapper for Pipeline 2: Document Statistics.
 
 Input:  doc_id\tdoc_title\tdoc_text
-Output: term\tdoc_id
+Output: doc_id\tdoc_title\tdl
 """
 import sys
 import re
@@ -15,7 +15,8 @@ for line in sys.stdin:
     if len(parts) < 3:
         continue
     doc_id = parts[0]
+    doc_title = parts[1]
     doc_text = parts[2]
     tokens = re.findall(r'[a-z0-9]+', doc_text.lower())
-    for token in tokens:
-        print("{}\t{}".format(token, doc_id))
+    dl = len(tokens)
+    print("{}\t{}\t{}".format(doc_id, doc_title, dl))

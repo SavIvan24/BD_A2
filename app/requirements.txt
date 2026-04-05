@@ -1,7 +1,6 @@
+# Spark reads Parquet via its built-in support; pyarrow/fastparquet omitted (they pull pandas).
 cassandra-driver
 venv-pack
-pyarrow
-fastparquet
 pathvalidate
 pyspark
 tqdm
