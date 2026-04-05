@@ -7,8 +7,28 @@ results.
 import sys
 import re
 import math
+import time
 from pyspark import SparkContext, SparkConf
 from cassandra.cluster import Cluster
+
+
+def connect_search_session(hosts, max_retries=36, delay=5):
+    """Cassandra may briefly refuse connections after port 9042 opens (DNS/ring)."""
+    last_err = None
+    for attempt in range(1, max_retries + 1):
+        try:
+            cluster_conn = Cluster(hosts)
+            session = cluster_conn.connect("search_engine")
+            return cluster_conn, session
+        except Exception as e:
+            last_err = e
+            print(
+                "Waiting for Cassandra session... {}/{} ({})".format(
+                    attempt, max_retries, e
+                )
+            )
+            time.sleep(delay)
+    raise RuntimeError("Could not connect to Cassandra: {}".format(last_err))
 
 
 def main():
@@ -25,8 +45,7 @@ def main():
     print("Query: '{}'".format(query_text))
     print("Terms: {}".format(query_terms))
 
-    cluster_conn = Cluster(['cassandra-server'])
-    session = cluster_conn.connect('search_engine')
+    cluster_conn, session = connect_search_session(["cassandra-server"])
 
     row = session.execute(
         "SELECT num_docs, avg_dl FROM corpus_stats WHERE id = 1").one()

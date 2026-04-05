@@ -44,6 +44,11 @@ services:
     container_name: cassandra-server
     ports:
       - "7000:7000"
+      - "9042:9042"
+    environment:
+      # Reduce heap to avoid OOM kill (exit 137) on laptops / WSL with limited RAM
+      - MAX_HEAP_SIZE=512M
+      - HEAP_NEWSIZE=128M
     networks:
       - spark-cluster
     

@@ -9,7 +9,9 @@ unset PYSPARK_PYTHON
 if [ -f a.parquet ]; then
     echo "Found parquet file, uploading to HDFS..."
     hdfs dfs -put -f a.parquet /
-    echo "Generating document files from parquet..."
+    echo "Generating document files from parquet (fresh data/ directory)..."
+    rm -rf data
+    mkdir -p data
     spark-submit prepare_data.py
 fi
 

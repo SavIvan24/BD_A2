@@ -12,7 +12,13 @@ spark = SparkSession.builder \
 
 df = spark.read.parquet("/a.parquet")
 n = 100
-df = df.select(['id', 'title', 'text']).sample(fraction=100 * n / df.count(), seed=0).limit(n)
+df = df.select(['id', 'title', 'text'])
+cnt = df.count()
+if cnt == 0:
+    raise RuntimeError("Parquet has no rows")
+# Spark sample() requires fraction in (0, 1]; avoid invalid fractions when cnt is small
+frac = min(1.0, max(float(n) / float(cnt), 1e-6))
+df = df.sample(withReplacement=False, fraction=frac, seed=0).limit(n)
 
 os.makedirs("data", exist_ok=True)
 

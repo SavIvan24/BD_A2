@@ -1,12 +1,21 @@
 #!/bin/bash
+set -euo pipefail
 
 echo "Create index using MapReduce pipelines"
 
 INPUT_PATH=${1:-/input/data}
-HADOOP_STREAMING_JAR=$(find $HADOOP_HOME -name "hadoop-streaming*.jar" 2>/dev/null | head -1)
-
+# Use the real streaming JAR under tools/lib — do not pick *-sources* / *-test* jars
+# (picking test-sources.jar makes RunJar treat "-input" as the main class → ClassNotFoundException).
+HADOOP_STREAMING_JAR=""
+if [ -n "${HADOOP_HOME:-}" ] && [ -d "$HADOOP_HOME/share/hadoop/tools/lib" ]; then
+    HADOOP_STREAMING_JAR=$(ls "$HADOOP_HOME/share/hadoop/tools/lib"/hadoop-streaming-*.jar 2>/dev/null | grep -v -- '-sources' | grep -v -- '-test' | head -1 || true)
+fi
 if [ -z "$HADOOP_STREAMING_JAR" ]; then
-    echo "ERROR: Hadoop streaming JAR not found"
+    HADOOP_STREAMING_JAR=$(find "$HADOOP_HOME" -path "*/tools/lib/hadoop-streaming*.jar" ! -name "*sources*" ! -name "*test*" 2>/dev/null | head -1 || true)
+fi
+
+if [ -z "$HADOOP_STREAMING_JAR" ] || [ ! -f "$HADOOP_STREAMING_JAR" ]; then
+    echo "ERROR: Hadoop streaming JAR not found under \$HADOOP_HOME (expected share/hadoop/tools/lib/hadoop-streaming-*.jar)"
     exit 1
 fi
 
